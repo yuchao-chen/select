@@ -23,9 +23,11 @@ namespace utils {
 		void run();
 
 	private:
-		void WalkDirs(std::vector<std::string> dirs);
+		void WalkThroughDirs(std::vector<std::string> dirs);
 		void ListFiles(QDir dir);
+		void FindMsOfFile();
 
+		unsigned short *ReadUShortFITS(std::string file_path, data::AttributeTablePtr header);
 		data::AttributeTablePtr task_config_;
 		std::vector<FileInfo> files_;
 	};
