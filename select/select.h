@@ -17,7 +17,8 @@ namespace widgets {
 		void SelectFoldersButtonClicked();
 		void ClearSelectedFoldersButtonClicked();
 		void NextStepButtonClicked();
-		
+		void UpdateStatusSlot(QString);
+		void UpdateProgressBarSlot(int, int);
 	private:
 		Ui::selectClass ui;
 		utils::TaskThread task_thread_;

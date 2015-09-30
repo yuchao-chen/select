@@ -30,6 +30,7 @@ namespace utils {
 			}
 			files_.clear();
 			WalkThroughDirs(folders);
+			emit UpdateStatus(QString::number(files_.size()) + " files found.");
 			FindMsOfFile();
 			//for (int i = 0; i < files_.size(); i++) {
 			//	qDebug() << files_[i].max << "..." << files_[i].min << "..." << files_[i].mean;
@@ -67,6 +68,8 @@ namespace utils {
 	}
 	void TaskThread::FindMsOfFile() {
 		std::vector<FileInfo>::iterator i;
+		int index = 0;
+		int size = files_.size();
 		for (i = files_.begin(); i != files_.end(); i++) {
 			data::AttributeTablePtr header = data::AttributeTable::create();
 			unsigned short *buf = ReadUShortFITS((*i).path, header);
@@ -88,11 +91,13 @@ namespace utils {
 				(*i).mean = mean / static_cast<double>(npixels);
 				qDebug() << max << "..." << min << "..." << mean;
 				delete[] buf;
+				index++;
+				emit UpdateProgressBar(index, size);
 			}
 		}
 	}
-	unsigned short *TaskThread::ReadUShortFITS(std::string file_path, data::AttributeTablePtr header) {
 
+	unsigned short *TaskThread::ReadUShortFITS(std::string file_path, data::AttributeTablePtr header) {
 		fitsfile *fptr = NULL;
 		int status = 0, nfound, anynull;
 		long naxes[2], fpixel, npixels;

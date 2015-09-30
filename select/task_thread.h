@@ -13,6 +13,7 @@ namespace utils {
 		double max;
 		double min;
 	};
+
 	class TaskThread: public QThread {
 		Q_OBJECT
 	public:
@@ -21,7 +22,9 @@ namespace utils {
 
 		void set_task(data::AttributeTablePtr task_config);
 		void run();
-
+	signals:
+		void UpdateStatus(QString);
+		void UpdateProgressBar(int, int);
 	private:
 		void WalkThroughDirs(std::vector<std::string> dirs);
 		void ListFiles(QDir dir);

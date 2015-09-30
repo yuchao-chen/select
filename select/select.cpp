@@ -24,9 +24,13 @@ namespace widgets {
 		ui.average_area_x_offset_spinbox->setValue(200);
 		ui.average_area_y_offset_spinbox->setValue(200);
 
+		ui.process_bar->hide();
+
 		connect(ui.select_folders_pushbutton, SIGNAL(clicked()), this, SLOT(SelectFoldersButtonClicked()));
 		connect(ui.clear_selected_folders_pushbutton, SIGNAL(clicked()), this, SLOT(ClearSelectedFoldersButtonClicked()));
 		connect(ui.next_step_pushbutton, SIGNAL(clicked()), this, SLOT(NextStepButtonClicked()));
+		connect(&task_thread_, SIGNAL(UpdateStatus(QString)), this, SLOT(UpdateStatusSlot(QString)));
+		connect(&task_thread_, SIGNAL(UpdateProgressBar(int, int)), this, SLOT(UpdateProgressBarSlot(int, int)));
 	}
 
 	Select::~Select() {
@@ -77,6 +81,23 @@ namespace widgets {
 			task_config->insert("TASKNAME", "READFOLDER");
 			task_config->insert("FOLDERS", folders);
 			task_thread_.set_task(task_config);
+		}
+	}
+
+	void Select::UpdateStatusSlot(QString msg) {
+		ui.status_label->setText(msg);
+	}
+
+	void Select::UpdateProgressBarSlot(int value, int max) {
+		if (ui.process_bar->isHidden()) {
+			ui.process_bar->show();
+		}
+		if (ui.process_bar->maximum() != max) {
+			ui.process_bar->setMaximum(max);
+		}
+		ui.process_bar->setValue(value);
+		if (value == max) {
+			ui.process_bar->hide();
 		}
 	}
 }
