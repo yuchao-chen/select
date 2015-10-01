@@ -197,7 +197,7 @@ namespace widgets {
 		config_->insert("MIN", min0[min0.size()/2]);
 		config_->insert("MEAN", mean0[mean0.size()/2]);
 
-		plot_->update();
+		plot_->replot();
 	}
 
 	void Select::SelectValidFiles() {
@@ -252,7 +252,7 @@ namespace widgets {
 			}
 		}
 		ui.status_label->setText(QString::number(valid_files.size()) + " files are valid.");
-		plot_->update();
+		plot_->replot();
 	}
 
 	void Select::FilterOptionsChangedSlot() {
