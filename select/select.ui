@@ -410,7 +410,7 @@
      <rect>
       <x>10</x>
       <y>260</y>
-      <width>111</width>
+      <width>101</width>
       <height>21</height>
      </rect>
     </property>
@@ -421,9 +421,9 @@
    <widget class="QProgressBar" name="process_bar">
     <property name="geometry">
      <rect>
-      <x>130</x>
+      <x>120</x>
       <y>260</y>
-      <width>118</width>
+      <width>131</width>
       <height>23</height>
      </rect>
     </property>

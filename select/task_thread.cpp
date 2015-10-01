@@ -32,9 +32,7 @@ namespace utils {
 			WalkThroughDirs(folders);
 			emit UpdateStatus(QString::number(files_.size()) + " files found.");
 			FindMsOfFile();
-			//for (int i = 0; i < files_.size(); i++) {
-			//	qDebug() << files_[i].max << "..." << files_[i].min << "..." << files_[i].mean;
-			//}
+			emit UpdateStatus("TASKDONE");
 		}
 	}
 
@@ -84,12 +82,12 @@ namespace utils {
 					} else if (min > buf[j]) {
 						min = buf[j];
 					}
-					mean += buf[j];
+					mean += buf[j] / static_cast<double>(npixels);
 				}
 				(*i).max = max;
 				(*i).min = min;
-				(*i).mean = mean / static_cast<double>(npixels);
-				qDebug() << max << "..." << min << "..." << mean;
+				(*i).mean = mean;
+				//qDebug() << max << "..." << min << "..." << mean;
 				delete[] buf;
 				index++;
 				emit UpdateProgressBar(index, size);

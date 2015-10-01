@@ -10,11 +10,14 @@
 namespace widgets {
 	Select::Select(QWidget *parent)
 		: QMainWindow(parent) {
-			ui.setupUi(this);
-			ui.step_two_groupbox->setEnabled(false);
+		current_step_ = 0;
+
+		ui.setupUi(this);
+		ui.step_two_groupbox->setEnabled(false);
 		ui.mean_filter_checkbox->setChecked(true);
 
 		ui.mean_shreshold_value_doublespinbox->setValue(0.9);
+		
 		ui.average_area_height_spinbox->setRange(1, 10000);
 		ui.average_area_width_spinbox->setRange(1,10000);
 		ui.average_area_x_offset_spinbox->setRange(0,10000);
@@ -23,6 +26,38 @@ namespace widgets {
 		ui.average_area_width_spinbox->setValue(700);
 		ui.average_area_x_offset_spinbox->setValue(200);
 		ui.average_area_y_offset_spinbox->setValue(200);
+
+		plot_ = new QCustomPlot();
+		
+		plot_->legend->setVisible(true);
+		plot_->legend->setFont(QFont("Helvetica",9));
+
+		//plot_->hide();
+		plot_->addGraph();
+		plot_->graph(0)->setName("Min");
+		plot_->graph(0)->setPen(QPen(Qt::blue)); // line color blue for first graph
+		//plot_->graph(0)->setBrush(QBrush(QColor(0, 0, 255, 20))); // first graph will be filled with translucent blue
+		plot_->addGraph();
+		plot_->graph(1)->setName("Max");
+		plot_->graph(1)->setPen(QPen(Qt::red)); // line color red for second graph
+
+		plot_->addGraph();
+		plot_->graph(2)->setName("Mean");
+		plot_->graph(2)->setPen(QPen(Qt::green));
+
+		plot_->xAxis2->setVisible(true);
+		plot_->xAxis2->setTickLabels(false);
+		plot_->yAxis2->setVisible(true);
+		plot_->yAxis2->setTickLabels(false);
+
+		connect(plot_->xAxis, SIGNAL(rangeChanged(QCPRange)), plot_->xAxis2, SLOT(setRange(QCPRange)));
+		connect(plot_->yAxis, SIGNAL(rangeChanged(QCPRange)), plot_->yAxis2, SLOT(setRange(QCPRange)));
+		
+		plot_->graph(0)->rescaleAxes(true);
+		plot_->graph(1)->rescaleAxes(true);
+		plot_->graph(2)->rescaleAxes(true);
+
+		plot_->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectPlottables);
 
 		ui.process_bar->hide();
 
@@ -34,17 +69,16 @@ namespace widgets {
 	}
 
 	Select::~Select() {
-
 	}
 
 	void Select::SelectFoldersButtonClicked() {
-		 QString dir = QFileDialog::getExistingDirectory(this, tr("Open Directory"),
-                                             "C:\\",
-                                             QFileDialog::ShowDirsOnly
-                                             | QFileDialog::DontResolveSymlinks);
-		 QString tmp = ui.selected_folders_label->text();
-		 tmp.append(dir+"<br>");
-		 ui.selected_folders_label->setText(tmp);
+		QString dir = QFileDialog::getExistingDirectory(this, tr("Open Directory"),
+			"C:\\",
+			QFileDialog::ShowDirsOnly
+			| QFileDialog::DontResolveSymlinks);
+		QString tmp = ui.selected_folders_label->text();
+		tmp.append(dir+"<br>");
+		ui.selected_folders_label->setText(tmp);
 	}
 
 	void Select::ClearSelectedFoldersButtonClicked() {
@@ -58,12 +92,8 @@ namespace widgets {
 			msgbox.exec();
 			return;
 		}
-		
 		data::AttributeTablePtr task_config = data::AttributeTable::create();
-
-		if(ui.step_two_groupbox->isEnabled()) {
-			
-		} else {
+		if (current_step_ == 0) {
 			//ui.step_two_groupbox->setEnabled(true);
 			QString folders_string = ui.selected_folders_label->text();
 			if (folders_string.isEmpty() || folders_string.isNull()) {
@@ -85,7 +115,15 @@ namespace widgets {
 	}
 
 	void Select::UpdateStatusSlot(QString msg) {
-		ui.status_label->setText(msg);
+		if (msg == "TASKDONE") {
+			if (current_step_ == 0) {
+				ui.step_two_groupbox->setEnabled(true);
+				PlotData();
+				current_step_ = 1;
+			}
+		} else {
+			ui.status_label->setText(msg);
+		}
 	}
 
 	void Select::UpdateProgressBarSlot(int value, int max) {
@@ -98,6 +136,38 @@ namespace widgets {
 		ui.process_bar->setValue(value);
 		if (value == max) {
 			ui.process_bar->hide();
+		}
+	}
+
+	void Select::PlotData() {
+		if (plot_->isHidden()) {
+			plot_->show();
+		}
+		std::vector<utils::FileInfo> data = task_thread_.data();
+		QVector<double> x(data.size()), min0(data.size()), mean0(data.size()), max0(data.size());
+		
+		double max1 = std::numeric_limits<double>::min();
+		double min1 = std::numeric_limits<double>::max();		
+		for (int i = 0; i < data.size(); i++) {
+			x[i] = i+1;
+			mean0[i] = data[i].mean;
+			min0[i] = data[i].min;
+			max0[i] = data[i].max;
+			if (max1 < max0[i]) {
+				max1 = max0[i];
+			}
+			if (min1 > min0[i]) {
+				min1 = min0[i];
+			}
+		}
+		plot_->xAxis->setRange(0, data.size()+1);
+		plot_->yAxis->setRange(min1, max1);
+		plot_->graph(0)->setData(x, min0);
+		plot_->graph(1)->setData(x, max0);
+		plot_->graph(2)->setData(x, mean0);
+
+		if (plot_->size().width() < 100) {
+			plot_->resize(500, 400);
 		}
 	}
 }

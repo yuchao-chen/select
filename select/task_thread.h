@@ -22,9 +22,15 @@ namespace utils {
 
 		void set_task(data::AttributeTablePtr task_config);
 		void run();
+		
+		std::vector<FileInfo> data() {
+			return files_;
+		}
+
 	signals:
 		void UpdateStatus(QString);
 		void UpdateProgressBar(int, int);
+	
 	private:
 		void WalkThroughDirs(std::vector<std::string> dirs);
 		void ListFiles(QDir dir);

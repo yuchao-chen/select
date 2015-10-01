@@ -5,6 +5,8 @@
 
 #include "ui_select.h"
 #include "task_thread.h"
+#include "qcustomplot.h"
+
 namespace widgets {
 	class Select : public QMainWindow {
 		Q_OBJECT
@@ -19,9 +21,14 @@ namespace widgets {
 		void NextStepButtonClicked();
 		void UpdateStatusSlot(QString);
 		void UpdateProgressBarSlot(int, int);
+		
 	private:
+		void PlotData();
+
 		Ui::selectClass ui;
 		utils::TaskThread task_thread_;
+		int current_step_;
+		QCustomPlot *plot_;
 	};
 }
 #endif // SELECT_H
