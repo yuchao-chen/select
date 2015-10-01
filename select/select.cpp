@@ -11,6 +11,7 @@ namespace widgets {
 	Select::Select(QWidget *parent)
 		: QMainWindow(parent) {
 		current_step_ = 0;
+		config_ = data::AttributeTable::create();
 
 		ui.setupUi(this);
 		ui.step_two_groupbox->setEnabled(false);
@@ -26,7 +27,7 @@ namespace widgets {
 		ui.average_area_width_spinbox->setValue(700);
 		ui.average_area_x_offset_spinbox->setValue(200);
 		ui.average_area_y_offset_spinbox->setValue(200);
-
+		
 		plot_ = new QCustomPlot();
 		
 		plot_->legend->setVisible(true);
@@ -44,6 +45,13 @@ namespace widgets {
 		plot_->addGraph();
 		plot_->graph(2)->setName("Mean");
 		plot_->graph(2)->setPen(QPen(Qt::green));
+
+		plot_->addGraph();
+		plot_->addGraph();
+		plot_->addGraph();
+		plot_->graph(3)->setPen(QPen(Qt::yellow));
+		plot_->graph(4)->setPen(QPen(Qt::cyan));
+		plot_->graph(5)->setPen(QPen(Qt::darkCyan));
 
 		plot_->xAxis2->setVisible(true);
 		plot_->xAxis2->setTickLabels(false);
@@ -66,9 +74,20 @@ namespace widgets {
 		connect(ui.next_step_pushbutton, SIGNAL(clicked()), this, SLOT(NextStepButtonClicked()));
 		connect(&task_thread_, SIGNAL(UpdateStatus(QString)), this, SLOT(UpdateStatusSlot(QString)));
 		connect(&task_thread_, SIGNAL(UpdateProgressBar(int, int)), this, SLOT(UpdateProgressBarSlot(int, int)));
+		
+		connect(ui.max_filter_checkbox, SIGNAL(stateChanged(int)), this, SLOT(FilterOptionsChangedSlot()));
+		connect(ui.min_filter_checkbox, SIGNAL(stateChanged(int)), this, SLOT(FilterOptionsChangedSlot()));
+		connect(ui.mean_filter_checkbox, SIGNAL(stateChanged(int)), this, SLOT(FilterOptionsChangedSlot()));
+
+		connect(ui.max_shreshold_value_doublespinbox, SIGNAL(valueChanged(double)), this, SLOT(FilterOptionsChangedSlot()));
+		connect(ui.min_shreshold_value_doublespinbox, SIGNAL(valueChanged(double)), this, SLOT(FilterOptionsChangedSlot()));
+		connect(ui.mean_shreshold_value_doublespinbox, SIGNAL(valueChanged(double)), this, SLOT(FilterOptionsChangedSlot()));
 	}
 
 	Select::~Select() {
+		if (!plot_->isHidden()) {
+			plot_->close();
+		}
 	}
 
 	void Select::SelectFoldersButtonClicked() {
@@ -119,6 +138,7 @@ namespace widgets {
 			if (current_step_ == 0) {
 				ui.step_two_groupbox->setEnabled(true);
 				PlotData();
+				SelectValidFiles();
 				current_step_ = 1;
 			}
 		} else {
@@ -169,5 +189,73 @@ namespace widgets {
 		if (plot_->size().width() < 100) {
 			plot_->resize(500, 400);
 		}
+		qSort(min0.begin(), min0.end());
+		qSort(max0.begin(), max0.end());
+		qSort(mean0.begin(), mean0.end());
+
+		config_->insert("MAX", max0[max0.size()/2]);
+		config_->insert("MIN", min0[min0.size()/2]);
+		config_->insert("MEAN", mean0[mean0.size()/2]);
+
+		plot_->update();
+	}
+
+	void Select::SelectValidFiles() {
+		std::vector<std::string> valid_files;
+		std::vector<utils::FileInfo> data = task_thread_.data();
+		double max0 = config_->get_double("MAX");
+		double min0 = config_->get_double("MIN");
+		double mean0 = config_->get_double("MEAN");
+
+		if (ui.max_filter_checkbox->isChecked()) {
+			max0 = max0 * ui.max_shreshold_value_doublespinbox->value();
+			QVector<double> y(data.size()), x(data.size());
+			for (int i = 0; i < data.size(); i++) {
+				x[i] = i+1;
+				y[i] = max0;
+			}
+			plot_->graph(3)->setData(x, y);
+		} else {
+			max0 = 0.0;
+		}
+
+		if (ui.min_filter_checkbox->isChecked()) {
+			min0 = min0 * ui.min_shreshold_value_doublespinbox->value();
+			QVector<double> y(data.size()), x(data.size());
+			for (int i = 0; i < data.size(); i++) {
+				x[i] = i+1;
+				y[i] = min0;
+			}
+			plot_->graph(4)->setData(x, y);
+		} else {
+			min0 = 0.0;
+		}
+
+		if (ui.mean_filter_checkbox->isChecked()) {
+			mean0 = mean0 * ui.mean_shreshold_value_doublespinbox->value();
+			QVector<double> y(data.size()), x(data.size());
+			for (int i = 0; i < data.size(); i++) {
+				x[i] = i+1;
+				y[i] = mean0;
+			}
+			plot_->graph(5)->setData(x, y);
+			qDebug() << mean0;
+		} else {
+			mean0 = 0.0;
+		}
+		//qDebug() << mean0 << "................" << max0;
+		for (int i = 0; i < data.size(); i++) {
+			if ((data[i].max > max0) &&
+				(data[i].min > min0) &&
+				(data[i].mean > mean0)) {
+					valid_files.push_back(data[i].path);
+			}
+		}
+		ui.status_label->setText(QString::number(valid_files.size()) + " files are valid.");
+		plot_->update();
+	}
+
+	void Select::FilterOptionsChangedSlot() {
+		SelectValidFiles();
 	}
 }

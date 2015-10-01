@@ -21,14 +21,16 @@ namespace widgets {
 		void NextStepButtonClicked();
 		void UpdateStatusSlot(QString);
 		void UpdateProgressBarSlot(int, int);
-		
+		void FilterOptionsChangedSlot();
 	private:
 		void PlotData();
+		void SelectValidFiles();
 
 		Ui::selectClass ui;
 		utils::TaskThread task_thread_;
 		int current_step_;
 		QCustomPlot *plot_;
+		data::AttributeTablePtr config_;
 	};
 }
 #endif // SELECT_H
