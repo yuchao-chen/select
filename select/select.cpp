@@ -49,9 +49,12 @@ namespace widgets {
 		plot_->addGraph();
 		plot_->addGraph();
 		plot_->addGraph();
-		plot_->graph(3)->setPen(QPen(Qt::yellow));
-		plot_->graph(4)->setPen(QPen(Qt::cyan));
-		plot_->graph(5)->setPen(QPen(Qt::darkCyan));
+		plot_->graph(3)->setName("Max shreshold value");
+		plot_->graph(3)->setPen(QPen(Qt::darkRed));
+		plot_->graph(4)->setName("Min shreshold value");
+		plot_->graph(4)->setPen(QPen(Qt::darkBlue));
+		plot_->graph(5)->setName("Mean shreshold value");
+		plot_->graph(5)->setPen(QPen(Qt::darkGreen));
 
 		plot_->xAxis2->setVisible(true);
 		plot_->xAxis2->setTickLabels(false);
@@ -82,6 +85,8 @@ namespace widgets {
 		connect(ui.max_shreshold_value_doublespinbox, SIGNAL(valueChanged(double)), this, SLOT(FilterOptionsChangedSlot()));
 		connect(ui.min_shreshold_value_doublespinbox, SIGNAL(valueChanged(double)), this, SLOT(FilterOptionsChangedSlot()));
 		connect(ui.mean_shreshold_value_doublespinbox, SIGNAL(valueChanged(double)), this, SLOT(FilterOptionsChangedSlot()));
+	
+		connect(ui.combine_pushbutton, SIGNAL(clicked()), this, SLOT(CombineSlot()));
 	}
 
 	Select::~Select() {
@@ -253,9 +258,18 @@ namespace widgets {
 		}
 		ui.status_label->setText(QString::number(valid_files.size()) + " files are valid.");
 		plot_->replot();
+		config_->insert("VALIDFILES", valid_files);
 	}
 
 	void Select::FilterOptionsChangedSlot() {
 		SelectValidFiles();
+	}
+
+	void Select::CombineSlot() {
+		std::vector<std::string> valid_files = config_->get_string_array("VALIDFILES");
+		data::AttributeTablePtr config = data::AttributeTable::create();
+		config->insert("TASKNAME", "COMBINE");
+		config->insert("VALIDFILES", valid_files);
+		task_thread_.set_task(config);
 	}
 }

@@ -33,6 +33,8 @@ namespace utils {
 			emit UpdateStatus(QString::number(files_.size()) + " files found.");
 			FindMsOfFile();
 			emit UpdateStatus("TASKDONE");
+		} else if (task_name == "COMBINE") {
+			CombineFiles();
 		}
 	}
 
@@ -116,6 +118,89 @@ namespace utils {
 		fits_close_file(fptr, &status);
 
 		header->insert("NPIXELS", npixels);
+		header->insert("WIDTH", naxes[0]);
+		header->insert("HEIGHT", naxes[1]);
 		return buf;
+	}
+
+	void TaskThread::CombineFiles() {
+		std::vector<std::string> files = task_config_->get_string_array("VALIDFILES");
+		int size = files.size();
+		double d_size = static_cast<double>(size);
+		data::AttributeTablePtr header0 = ReadFITSHeader(files[0]);
+		long npixels = header0->get_long("NPIXELS");
+		float *combined_file = new float[npixels]();
+
+		for (int i = 0; i < size; i++) {
+			data::AttributeTablePtr header = data::AttributeTable::create();
+			unsigned short *buf = ReadUShortFITS(files[i], header);
+			if (npixels == header->get_long("NPIXELS")) {
+				for (int j = 0; j < npixels; j++) {
+					combined_file[j] += buf[j] / d_size;
+				}
+			}
+			qDebug() << i << "..........." << size;
+			emit UpdateProgressBar(i+1, size);
+			delete[] buf;
+		}
+		WriteFloatFITS(combined_file, header0);
+		delete[] combined_file;
+	}
+
+	data::AttributeTablePtr TaskThread::ReadFITSHeader(std::string file_path) {
+		data::AttributeTablePtr header = data::AttributeTable::create();
+		fitsfile *fptr = NULL;
+		int status = 0, nfound, anynull;
+		long naxes[2], fpixel, npixels;
+		unsigned short nullval;
+
+		if (fits_open_file(&fptr, file_path.c_str(), READONLY, &status)) {
+			qDebug() << "[-] Cannot load test fits" << status;
+		}
+		if (fits_read_keys_lng(fptr, "NAXIS", 1, 2, naxes, &nfound, &status)) {
+			qDebug() << "[-] Cannot read keys" << status;
+		}
+		
+		npixels = naxes[0] * naxes[1];
+		fits_close_file(fptr, &status);
+
+		header->insert("NPIXELS", npixels);
+		header->insert("WIDTH", naxes[0]);
+		header->insert("HEIGHT", naxes[1]);
+		return header;
+	}
+
+	void TaskThread::WriteFloatFITS(float *data, data::AttributeTablePtr header) {
+	
+		std::string path = "C:/Workspace/flat.fits";
+		fitsfile *fptr;
+
+		int status = 0;
+		int bitpix = FLOAT_IMG;
+		long naxis = 2;
+		long naxes[2];
+
+		naxes[0] = header->get_long("WIDTH");
+		naxes[1] = header->get_long("HEIGHT");
+
+		remove(path.c_str());
+
+		if (fits_create_file(&fptr, path.c_str(), &status)) {
+			qDebug() << "Cannot create file: Error " << status;
+		}
+
+		if (fits_create_img(fptr, bitpix, naxis, naxes, &status)) {
+			qDebug() << "Cannot create image: Error " << status;
+		}
+
+		long fpixel = 1;
+		long nelements = naxes[0] * naxes[1];
+		if (fits_write_img(fptr, TFLOAT, fpixel, nelements, data, &status)) {
+			qDebug() << "Cannot write file: Error " << status;
+		}
+
+		if (fits_close_file(fptr, &status)) {
+			qDebug() << "Cannot close file: Error " << status;
+		}
 	}
 }

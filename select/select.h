@@ -22,6 +22,7 @@ namespace widgets {
 		void UpdateStatusSlot(QString);
 		void UpdateProgressBarSlot(int, int);
 		void FilterOptionsChangedSlot();
+		void CombineSlot();
 	private:
 		void PlotData();
 		void SelectValidFiles();

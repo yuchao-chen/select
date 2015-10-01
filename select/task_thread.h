@@ -35,8 +35,12 @@ namespace utils {
 		void WalkThroughDirs(std::vector<std::string> dirs);
 		void ListFiles(QDir dir);
 		void FindMsOfFile();
+		void CombineFiles();
 
 		unsigned short *ReadUShortFITS(std::string file_path, data::AttributeTablePtr header);
+		//void ReadFITSHeader(std::string file_path, data::AttributeTablePtr header);
+		data::AttributeTablePtr ReadFITSHeader(std::string file_path);
+		void WriteFloatFITS(float *data, data::AttributeTablePtr header);
 		data::AttributeTablePtr task_config_;
 		std::vector<FileInfo> files_;
 	};

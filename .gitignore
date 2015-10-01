@@ -229,3 +229,9 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# External libs
+lib/
+
+# Qt Generated Files
+select/GeneratedFiles/
