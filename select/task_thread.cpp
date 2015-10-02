@@ -24,10 +24,33 @@ namespace utils {
 		}
 		return result;
 	}
-
+	std::wstring S2WS(const std::string& s){
+		int len;
+		int slength = (int)s.length() + 1;
+		len = MultiByteToWideChar(CP_ACP, 0, s.c_str(), slength, 0, 0);
+		wchar_t* buf = new wchar_t[len];
+		MultiByteToWideChar(CP_ACP, 0, s.c_str(), slength, buf, len);
+		std::wstring r(buf);
+		delete[] buf;
+		return r;
+	}
 
 	TaskThread::TaskThread()
 		:task_config_(data::AttributeTable::create()) {
+		
+		QString config_file = "config";
+
+		QFile file(config_file);
+		if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+			view_app_ = "C:\\Program Files\\Diffraction Limited\\MaxIm DL V5\\MaxIm_DL.exe";
+			if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+				QTextStream out(&file);
+				out << QString::fromStdString(view_app_);
+			}
+		} else {
+			QTextStream in(&file);
+			view_app_ = in.readLine().toStdString();
+		}
 	}
 
 	TaskThread::~TaskThread() {
@@ -168,7 +191,14 @@ namespace utils {
 		si.cb = sizeof(si);
 		ZeroMemory( &pi, sizeof(pi) );
 		// Start the child process. 
-		if (!CreateProcess( L"C:\\Program Files\\Diffraction Limited\\MaxIm DL V5\\MaxIm_DL.exe",
+		
+#ifdef UNICODE
+		std::wstring stemp = S2WS(view_app_); // Temporary buffer is required
+		LPCWSTR v = stemp.c_str();
+#else
+		LPCWSTR v = s.c_str();
+#endif
+		if (!CreateProcess( v,
 			L"MaxIm_DL.exe flat.fits", NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi )) {
 				qDebug() << "FUCKING ERROR";
 		}

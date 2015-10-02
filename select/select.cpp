@@ -204,9 +204,7 @@ namespace widgets {
 	}
 
 	void Select::PlotData() {
-		if (plot_->isHidden()) {
-			plot_->show();
-		}
+
 		std::vector<utils::FileInfo> data = task_thread_.data();
 		QVector<double> x(data.size()), min0(data.size()), mean0(data.size()), max0(data.size());
 
@@ -230,9 +228,6 @@ namespace widgets {
 		plot_->graph(1)->setData(x, max0);
 		plot_->graph(2)->setData(x, mean0);
 
-		if (plot_->size().width() < 100) {
-			plot_->resize(500, 400);
-		}
 		qSort(min0.begin(), min0.end());
 		qSort(max0.begin(), max0.end());
 		qSort(mean0.begin(), mean0.end());
@@ -241,6 +236,12 @@ namespace widgets {
 		config_->insert("MIN", min0[min0.size()/2]);
 		config_->insert("MEAN", mean0[mean0.size()/2]);
 
+		if (plot_->isHidden()) {
+			plot_->show();
+		}
+		if (plot_->size().width() < 100) {
+			plot_->resize(500, 400);
+		}
 		plot_->replot();
 	}
 

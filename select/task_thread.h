@@ -1,6 +1,8 @@
 #ifndef TASK_THREAD_H
 #define TASK_THREAD_H
 
+#include <string>
+
 #include <QThread>
 #include <QDir>
 
@@ -45,6 +47,7 @@ namespace utils {
 		void WriteFloatFITS(float *data, data::AttributeTablePtr header);
 		data::AttributeTablePtr task_config_;
 		std::vector<FileInfo> files_;
+		std::string view_app_;
 	};
 }
 #endif
