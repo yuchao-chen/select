@@ -15,10 +15,17 @@ namespace widgets {
 
 		ui.setupUi(this);
 		ui.step_two_groupbox->setEnabled(false);
+		ui.step_three_groupbox->setEnabled(false);
+		ui.average_area_groupbox->setEnabled(false);
 		ui.mean_filter_checkbox->setChecked(true);
 
 		ui.mean_shreshold_value_doublespinbox->setValue(0.9);
-		
+		ui.max_shreshold_value_doublespinbox->setValue(0.9);
+		ui.min_shreshold_value_doublespinbox->setValue(0.9);
+		ui.mean_shreshold_value_doublespinbox->setSingleStep(0.01);
+		ui.max_shreshold_value_doublespinbox->setSingleStep(0.01);
+		ui.min_shreshold_value_doublespinbox->setSingleStep(0.01);
+
 		ui.average_area_height_spinbox->setRange(1, 10000);
 		ui.average_area_width_spinbox->setRange(1,10000);
 		ui.average_area_x_offset_spinbox->setRange(0,10000);
@@ -49,11 +56,11 @@ namespace widgets {
 		plot_->addGraph();
 		plot_->addGraph();
 		plot_->addGraph();
-		plot_->graph(3)->setName("Max shreshold value");
+		plot_->graph(3)->setName("Max Threshold");
 		plot_->graph(3)->setPen(QPen(Qt::darkRed));
-		plot_->graph(4)->setName("Min shreshold value");
+		plot_->graph(4)->setName("Min Threshold");
 		plot_->graph(4)->setPen(QPen(Qt::darkBlue));
-		plot_->graph(5)->setName("Mean shreshold value");
+		plot_->graph(5)->setName("Mean Threshold");
 		plot_->graph(5)->setPen(QPen(Qt::darkGreen));
 
 		plot_->xAxis2->setVisible(true);
@@ -87,6 +94,8 @@ namespace widgets {
 		connect(ui.mean_shreshold_value_doublespinbox, SIGNAL(valueChanged(double)), this, SLOT(FilterOptionsChangedSlot()));
 	
 		connect(ui.combine_pushbutton, SIGNAL(clicked()), this, SLOT(CombineSlot()));
+
+		connect(ui.select_output_folder_pushbutton, SIGNAL(clicked()), this, SLOT(SelectOutputFolderSlot()));
 	}
 
 	Select::~Select() {
@@ -135,6 +144,25 @@ namespace widgets {
 			task_config->insert("TASKNAME", "READFOLDER");
 			task_config->insert("FOLDERS", folders);
 			task_thread_.set_task(task_config);
+		} else if (current_step_ == 1) {
+			QString folder = ui.output_folder_lable->text();
+			if (folder.isEmpty() || folder.isNull()) {
+				return;
+			}
+			std::vector<std::string> valid_files = config_->get_string_array("VALIDFILES");
+			if (valid_files.size() < 1) {
+				return;
+			}
+			task_config->insert("TASKNAME", "TRANSFERFILES");
+			task_config->insert("VALIDFILES", valid_files);
+			task_config->insert("DESTFOLDER", folder.toStdString());
+			task_config->insert("PREFIX", ui.prefix_lineedit->text().toStdString());
+			if (ui.rename_files_checkbox->isChecked()) {
+				task_config->insert("RENAMEFILES", "ENABLED");
+			} else {
+				task_config->insert("RENAMEFILES", "DISABLED");
+			}
+			task_thread_.set_task(task_config);
 		}
 	}
 
@@ -142,6 +170,8 @@ namespace widgets {
 		if (msg == "TASKDONE") {
 			if (current_step_ == 0) {
 				ui.step_two_groupbox->setEnabled(true);
+				ui.step_three_groupbox->setEnabled(true);
+
 				PlotData();
 				SelectValidFiles();
 				current_step_ = 1;
@@ -259,6 +289,8 @@ namespace widgets {
 		ui.status_label->setText(QString::number(valid_files.size()) + " files are valid.");
 		plot_->replot();
 		config_->insert("VALIDFILES", valid_files);
+
+		ExtractCommonFilePrefix();
 	}
 
 	void Select::FilterOptionsChangedSlot() {
@@ -271,5 +303,30 @@ namespace widgets {
 		config->insert("TASKNAME", "COMBINE");
 		config->insert("VALIDFILES", valid_files);
 		task_thread_.set_task(config);
+	}
+
+	void Select::SelectOutputFolderSlot() {
+		QString dir = QFileDialog::getExistingDirectory(this, tr("Open Directory"),
+			"C:\\",
+			QFileDialog::ShowDirsOnly
+			| QFileDialog::DontResolveSymlinks);
+		ui.output_folder_lable->setText(dir);
+	}
+
+	void Select::ExtractCommonFilePrefix() {
+		std::vector<std::string> valid_files = config_->get_string_array("VALIDFILES");
+		if (valid_files.size() < 2) {
+			return;
+		}
+		QString s1 = QString::fromStdString(valid_files[0]);
+		QString s2 = QString::fromStdString(valid_files[valid_files.size()-1]);
+		QString s10 = s1.remove(0, s1.lastIndexOf("/")+1);
+		QString s20 = s2.remove(0, s2.lastIndexOf("/")+1);
+		int pos = 0;
+		while (pos > -1) {
+			pos = s10.lastIndexOf(QRegExp("\\d+"));
+			s10.remove(pos, s10.size());
+		}
+		ui.prefix_lineedit->setText(s10);
 	}
 }

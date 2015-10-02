@@ -3,14 +3,29 @@
 #include <string>
 #include <vector>
 #include <limits>
+#include <sstream>
+#include <iomanip>
 
 #include <QDebug>
 #include <QFileInfoList>
 #include <QFileInfo>
+#include <QProcess>
+#include <QFile>
 
 #include <fitsio.h>
 
 namespace utils {
+	std::string ZeroPadNumber(int num, int digit_num) {
+		std::ostringstream ss;
+		ss << std::setw(digit_num) << std::setfill('0') << num;
+		std::string result = ss.str();
+		if (result.length() > digit_num) {
+			result.erase(0, result.length() - digit_num);
+		}
+		return result;
+	}
+
+
 	TaskThread::TaskThread()
 		:task_config_(data::AttributeTable::create()) {
 	}
@@ -35,6 +50,8 @@ namespace utils {
 			emit UpdateStatus("TASKDONE");
 		} else if (task_name == "COMBINE") {
 			CombineFiles();
+		} else if (task_name == "TRANSFERFILES") {
+			TransferFiles();
 		}
 	}
 
@@ -139,12 +156,13 @@ namespace utils {
 					combined_file[j] += buf[j] / d_size;
 				}
 			}
-			qDebug() << i << "..........." << size;
+			//qDebug() << i << "..........." << size;
 			emit UpdateProgressBar(i+1, size);
 			delete[] buf;
 		}
 		WriteFloatFITS(combined_file, header0);
 		delete[] combined_file;
+
 	}
 
 	data::AttributeTablePtr TaskThread::ReadFITSHeader(std::string file_path) {
@@ -171,7 +189,6 @@ namespace utils {
 	}
 
 	void TaskThread::WriteFloatFITS(float *data, data::AttributeTablePtr header) {
-	
 		std::string path = "C:/Workspace/flat.fits";
 		fitsfile *fptr;
 
@@ -201,6 +218,33 @@ namespace utils {
 
 		if (fits_close_file(fptr, &status)) {
 			qDebug() << "Cannot close file: Error " << status;
+		}
+	}
+
+	void TaskThread::TransferFiles() {
+		std::vector<std::string> valid_files = task_config_->get_string_array("VALIDFILES");
+		std::string dest_folder = task_config_->get_string("DESTFOLDER");
+		std::string prefix = task_config_->get_string("PREFIX");
+		bool rename_files = true;
+		if (task_config_->get_string("RENAMEFILES") == "DISABLED") {
+			rename_files = false;
+		}
+		int size = valid_files.size();
+		for (int i = 0; i < size; i++) {
+			QString original_name = QString::fromStdString(valid_files[i]);
+			QString new_name = "";
+			if (rename_files) {
+				new_name = QString::fromStdString(dest_folder + "/" + prefix + "_" + ZeroPadNumber(i, 6) + ".fits");
+			} else {
+				QStringList s = original_name.split("/", QString::SkipEmptyParts);
+				QString f = s[s.size()-1];
+				new_name = QString::fromStdString(dest_folder + "/") + f;
+			}
+			if (QFile::exists(new_name)) {
+				QFile::remove(new_name);
+			}
+			QFile::copy(original_name, new_name);
+			emit UpdateProgressBar(i+1, size);
 		}
 	}
 }

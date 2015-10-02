@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>432</width>
-    <height>289</height>
+    <height>300</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -220,7 +220,7 @@
       </font>
      </property>
     </widget>
-    <widget class="QGroupBox" name="groupBox_2">
+    <widget class="QGroupBox" name="average_area_groupbox">
      <property name="geometry">
       <rect>
        <x>200</x>
@@ -373,7 +373,7 @@
     <property name="geometry">
      <rect>
       <x>360</x>
-      <y>260</y>
+      <y>270</y>
       <width>51</width>
       <height>23</height>
      </rect>
@@ -391,7 +391,7 @@
     <property name="geometry">
      <rect>
       <x>300</x>
-      <y>260</y>
+      <y>270</y>
       <width>51</width>
       <height>23</height>
      </rect>
@@ -405,13 +405,13 @@
      <string>Prev.</string>
     </property>
    </widget>
-   <widget class="QGroupBox" name="groupBox">
+   <widget class="QGroupBox" name="step_three_groupbox">
     <property name="geometry">
      <rect>
       <x>10</x>
       <y>190</y>
       <width>411</width>
-      <height>51</height>
+      <height>71</height>
      </rect>
     </property>
     <property name="font">
@@ -422,25 +422,110 @@
     <property name="title">
      <string>Step III:</string>
     </property>
+    <widget class="QPushButton" name="select_output_folder_pushbutton">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>25</y>
+       <width>121</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>8</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Select Output Folder</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="output_folder_lable">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>50</y>
+       <width>381</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>8</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="rename_files_checkbox">
+     <property name="geometry">
+      <rect>
+       <x>180</x>
+       <y>30</y>
+       <width>81</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>8</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Rename files</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_6">
+     <property name="geometry">
+      <rect>
+       <x>290</x>
+       <y>30</y>
+       <width>31</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>8</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Prefix:</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="prefix_lineedit">
+     <property name="geometry">
+      <rect>
+       <x>330</x>
+       <y>30</y>
+       <width>71</width>
+       <height>20</height>
+      </rect>
+     </property>
+    </widget>
    </widget>
    <widget class="QLabel" name="status_label">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>260</y>
+      <y>270</y>
       <width>101</width>
       <height>21</height>
      </rect>
     </property>
     <property name="text">
-     <string>TextLabel</string>
+     <string/>
     </property>
    </widget>
    <widget class="QProgressBar" name="process_bar">
     <property name="geometry">
      <rect>
       <x>110</x>
-      <y>260</y>
+      <y>270</y>
       <width>131</width>
       <height>23</height>
      </rect>

@@ -23,9 +23,11 @@ namespace widgets {
 		void UpdateProgressBarSlot(int, int);
 		void FilterOptionsChangedSlot();
 		void CombineSlot();
+		void SelectOutputFolderSlot();
 	private:
 		void PlotData();
 		void SelectValidFiles();
+		void ExtractCommonFilePrefix();
 
 		Ui::selectClass ui;
 		utils::TaskThread task_thread_;

@@ -36,8 +36,10 @@ namespace utils {
 		void ListFiles(QDir dir);
 		void FindMsOfFile();
 		void CombineFiles();
+		void TransferFiles();
 
 		unsigned short *ReadUShortFITS(std::string file_path, data::AttributeTablePtr header);
+
 		//void ReadFITSHeader(std::string file_path, data::AttributeTablePtr header);
 		data::AttributeTablePtr ReadFITSHeader(std::string file_path);
 		void WriteFloatFITS(float *data, data::AttributeTablePtr header);
