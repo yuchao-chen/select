@@ -506,6 +506,11 @@
        <height>20</height>
       </rect>
      </property>
+     <property name="font">
+      <font>
+       <pointsize>8</pointsize>
+      </font>
+     </property>
     </widget>
    </widget>
    <widget class="QLabel" name="status_label">
@@ -526,7 +531,7 @@
      <rect>
       <x>110</x>
       <y>270</y>
-      <width>131</width>
+      <width>151</width>
       <height>23</height>
      </rect>
     </property>

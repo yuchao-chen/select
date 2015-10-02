@@ -1,5 +1,5 @@
 #include "task_thread.h"
-
+#include <Windows.h>
 #include <string>
 #include <vector>
 #include <limits>
@@ -91,8 +91,8 @@ namespace utils {
 			data::AttributeTablePtr header = data::AttributeTable::create();
 			unsigned short *buf = ReadUShortFITS((*i).path, header);
 			if (buf) {
-				double max = std::numeric_limits<double>::min();
-				double min = std::numeric_limits<double>::max();
+				double max = buf[0];
+				double min = buf[0];
 				double mean = 0.0;
 				long npixels = header->get_long("NPIXELS");
 				for (int j = 0; j < npixels; j++) {
@@ -161,11 +161,27 @@ namespace utils {
 			delete[] buf;
 		}
 		WriteFloatFITS(combined_file, header0);
+
+		STARTUPINFO si;
+		PROCESS_INFORMATION pi;
+		ZeroMemory( &si, sizeof(si) );
+		si.cb = sizeof(si);
+		ZeroMemory( &pi, sizeof(pi) );
+		// Start the child process. 
+		if (!CreateProcess( L"C:\\Program Files\\Diffraction Limited\\MaxIm DL V5\\MaxIm_DL.exe",
+			L"MaxIm_DL.exe flat.fits", NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi )) {
+				qDebug() << "FUCKING ERROR";
+		}
+
 		delete[] combined_file;
 
 	}
 
 	data::AttributeTablePtr TaskThread::ReadFITSHeader(std::string file_path) {
+		//file_path += "[" + task_config_->get_string("AVERAGEAREAXOFFSET") +
+		//	task_config_->get_string("AVERAGEAREAWIDTH") + "," +
+		//	task_config_->get_string("AVERAGEAREAYOFFSET") +
+		//	task_config_->get_string("AVERAGEAREAHEIGHT") + "]";//"[200:700,200:700]";
 		data::AttributeTablePtr header = data::AttributeTable::create();
 		fitsfile *fptr = NULL;
 		int status = 0, nfound, anynull;
@@ -189,7 +205,7 @@ namespace utils {
 	}
 
 	void TaskThread::WriteFloatFITS(float *data, data::AttributeTablePtr header) {
-		std::string path = "C:/Workspace/flat.fits";
+		std::string path = "flat.fits";
 		fitsfile *fptr;
 
 		int status = 0;

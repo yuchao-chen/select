@@ -6,96 +6,101 @@
 #include <QDebug>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QProcess>
 
 namespace widgets {
 	Select::Select(QWidget *parent)
 		: QMainWindow(parent) {
-		current_step_ = 0;
-		config_ = data::AttributeTable::create();
+			current_step_ = 0;
+			config_ = data::AttributeTable::create();
 
-		ui.setupUi(this);
-		ui.step_two_groupbox->setEnabled(false);
-		ui.step_three_groupbox->setEnabled(false);
-		ui.average_area_groupbox->setEnabled(false);
-		ui.mean_filter_checkbox->setChecked(true);
+			ui.setupUi(this);
+			ui.step_two_groupbox->setEnabled(false);
+			ui.step_three_groupbox->setEnabled(false);
+			ui.average_area_groupbox->setEnabled(false);
+			ui.mean_filter_checkbox->setChecked(true);
 
-		ui.mean_shreshold_value_doublespinbox->setValue(0.9);
-		ui.max_shreshold_value_doublespinbox->setValue(0.9);
-		ui.min_shreshold_value_doublespinbox->setValue(0.9);
-		ui.mean_shreshold_value_doublespinbox->setSingleStep(0.01);
-		ui.max_shreshold_value_doublespinbox->setSingleStep(0.01);
-		ui.min_shreshold_value_doublespinbox->setSingleStep(0.01);
+			ui.mean_shreshold_value_doublespinbox->setValue(0.9);
+			ui.max_shreshold_value_doublespinbox->setValue(0.9);
+			ui.min_shreshold_value_doublespinbox->setValue(0.9);
+			ui.mean_shreshold_value_doublespinbox->setSingleStep(0.01);
+			ui.max_shreshold_value_doublespinbox->setSingleStep(0.01);
+			ui.min_shreshold_value_doublespinbox->setSingleStep(0.01);
 
-		ui.average_area_height_spinbox->setRange(1, 10000);
-		ui.average_area_width_spinbox->setRange(1,10000);
-		ui.average_area_x_offset_spinbox->setRange(0,10000);
-		ui.average_area_y_offset_spinbox->setRange(0, 10000);
-		ui.average_area_height_spinbox->setValue(700);
-		ui.average_area_width_spinbox->setValue(700);
-		ui.average_area_x_offset_spinbox->setValue(200);
-		ui.average_area_y_offset_spinbox->setValue(200);
-		
-		plot_ = new QCustomPlot();
-		
-		plot_->legend->setVisible(true);
-		plot_->legend->setFont(QFont("Helvetica",9));
+			ui.average_area_height_spinbox->setRange(1, 10000);
+			ui.average_area_width_spinbox->setRange(1,10000);
+			ui.average_area_x_offset_spinbox->setRange(0,10000);
+			ui.average_area_y_offset_spinbox->setRange(0, 10000);
+			ui.average_area_height_spinbox->setValue(500);
+			ui.average_area_width_spinbox->setValue(500);
+			ui.average_area_x_offset_spinbox->setValue(200);
+			ui.average_area_y_offset_spinbox->setValue(200);
 
-		//plot_->hide();
-		plot_->addGraph();
-		plot_->graph(0)->setName("Min");
-		plot_->graph(0)->setPen(QPen(Qt::blue)); // line color blue for first graph
-		//plot_->graph(0)->setBrush(QBrush(QColor(0, 0, 255, 20))); // first graph will be filled with translucent blue
-		plot_->addGraph();
-		plot_->graph(1)->setName("Max");
-		plot_->graph(1)->setPen(QPen(Qt::red)); // line color red for second graph
+			plot_ = new QCustomPlot();
 
-		plot_->addGraph();
-		plot_->graph(2)->setName("Mean");
-		plot_->graph(2)->setPen(QPen(Qt::green));
+			plot_->legend->setVisible(true);
+			//plot_->legend->setFont(QFont("Helvetica",9));
 
-		plot_->addGraph();
-		plot_->addGraph();
-		plot_->addGraph();
-		plot_->graph(3)->setName("Max Threshold");
-		plot_->graph(3)->setPen(QPen(Qt::darkRed));
-		plot_->graph(4)->setName("Min Threshold");
-		plot_->graph(4)->setPen(QPen(Qt::darkBlue));
-		plot_->graph(5)->setName("Mean Threshold");
-		plot_->graph(5)->setPen(QPen(Qt::darkGreen));
+			//plot_->hide();
+			plot_->addGraph();
+			plot_->graph(0)->setName("Min");
+			plot_->graph(0)->setPen(QPen(Qt::blue)); // line color blue for first graph
+			//plot_->graph(0)->setBrush(QBrush(QColor(0, 0, 255, 20))); // first graph will be filled with translucent blue
+			plot_->addGraph();
+			plot_->graph(1)->setName("Max");
+			plot_->graph(1)->setPen(QPen(Qt::red)); // line color red for second graph
 
-		plot_->xAxis2->setVisible(true);
-		plot_->xAxis2->setTickLabels(false);
-		plot_->yAxis2->setVisible(true);
-		plot_->yAxis2->setTickLabels(false);
+			plot_->addGraph();
+			plot_->graph(2)->setName("Mean");
+			plot_->graph(2)->setPen(QPen(Qt::green));
 
-		connect(plot_->xAxis, SIGNAL(rangeChanged(QCPRange)), plot_->xAxis2, SLOT(setRange(QCPRange)));
-		connect(plot_->yAxis, SIGNAL(rangeChanged(QCPRange)), plot_->yAxis2, SLOT(setRange(QCPRange)));
-		
-		plot_->graph(0)->rescaleAxes(true);
-		plot_->graph(1)->rescaleAxes(true);
-		plot_->graph(2)->rescaleAxes(true);
+			plot_->addGraph();
+			plot_->addGraph();
+			plot_->addGraph();
+			plot_->graph(3)->setName("Max Threshold");
+			plot_->graph(3)->setPen(QPen(Qt::darkRed));
+			plot_->graph(4)->setName("Min Threshold");
+			plot_->graph(4)->setPen(QPen(Qt::darkBlue));
+			plot_->graph(5)->setName("Mean Threshold");
+			plot_->graph(5)->setPen(QPen(Qt::darkGreen));
 
-		plot_->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectPlottables);
+			plot_->xAxis2->setVisible(true);
+			plot_->xAxis2->setTickLabels(false);
+			plot_->yAxis2->setVisible(true);
+			plot_->yAxis2->setTickLabels(false);
 
-		ui.process_bar->hide();
+			connect(plot_->xAxis, SIGNAL(rangeChanged(QCPRange)), plot_->xAxis2, SLOT(setRange(QCPRange)));
+			connect(plot_->yAxis, SIGNAL(rangeChanged(QCPRange)), plot_->yAxis2, SLOT(setRange(QCPRange)));
 
-		connect(ui.select_folders_pushbutton, SIGNAL(clicked()), this, SLOT(SelectFoldersButtonClicked()));
-		connect(ui.clear_selected_folders_pushbutton, SIGNAL(clicked()), this, SLOT(ClearSelectedFoldersButtonClicked()));
-		connect(ui.next_step_pushbutton, SIGNAL(clicked()), this, SLOT(NextStepButtonClicked()));
-		connect(&task_thread_, SIGNAL(UpdateStatus(QString)), this, SLOT(UpdateStatusSlot(QString)));
-		connect(&task_thread_, SIGNAL(UpdateProgressBar(int, int)), this, SLOT(UpdateProgressBarSlot(int, int)));
-		
-		connect(ui.max_filter_checkbox, SIGNAL(stateChanged(int)), this, SLOT(FilterOptionsChangedSlot()));
-		connect(ui.min_filter_checkbox, SIGNAL(stateChanged(int)), this, SLOT(FilterOptionsChangedSlot()));
-		connect(ui.mean_filter_checkbox, SIGNAL(stateChanged(int)), this, SLOT(FilterOptionsChangedSlot()));
+			plot_->graph(0)->rescaleAxes(true);
+			plot_->graph(1)->rescaleAxes(true);
+			plot_->graph(2)->rescaleAxes(true);
 
-		connect(ui.max_shreshold_value_doublespinbox, SIGNAL(valueChanged(double)), this, SLOT(FilterOptionsChangedSlot()));
-		connect(ui.min_shreshold_value_doublespinbox, SIGNAL(valueChanged(double)), this, SLOT(FilterOptionsChangedSlot()));
-		connect(ui.mean_shreshold_value_doublespinbox, SIGNAL(valueChanged(double)), this, SLOT(FilterOptionsChangedSlot()));
-	
-		connect(ui.combine_pushbutton, SIGNAL(clicked()), this, SLOT(CombineSlot()));
+			plot_->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectPlottables);
 
-		connect(ui.select_output_folder_pushbutton, SIGNAL(clicked()), this, SLOT(SelectOutputFolderSlot()));
+			ui.process_bar->hide();
+
+			connect(ui.select_folders_pushbutton, SIGNAL(clicked()), this, SLOT(SelectFoldersButtonClicked()));
+			connect(ui.clear_selected_folders_pushbutton, SIGNAL(clicked()), this, SLOT(ClearSelectedFoldersButtonClicked()));
+			connect(ui.next_step_pushbutton, SIGNAL(clicked()), this, SLOT(NextStepButtonClicked()));
+			connect(&task_thread_, SIGNAL(UpdateStatus(QString)), this, SLOT(UpdateStatusSlot(QString)));
+			connect(&task_thread_, SIGNAL(UpdateProgressBar(int, int)), this, SLOT(UpdateProgressBarSlot(int, int)));
+
+			connect(ui.max_filter_checkbox, SIGNAL(stateChanged(int)), this, SLOT(FilterOptionsChangedSlot()));
+			connect(ui.min_filter_checkbox, SIGNAL(stateChanged(int)), this, SLOT(FilterOptionsChangedSlot()));
+			connect(ui.mean_filter_checkbox, SIGNAL(stateChanged(int)), this, SLOT(FilterOptionsChangedSlot()));
+
+			connect(ui.max_shreshold_value_doublespinbox, SIGNAL(valueChanged(double)), this, SLOT(FilterOptionsChangedSlot()));
+			connect(ui.min_shreshold_value_doublespinbox, SIGNAL(valueChanged(double)), this, SLOT(FilterOptionsChangedSlot()));
+			connect(ui.mean_shreshold_value_doublespinbox, SIGNAL(valueChanged(double)), this, SLOT(FilterOptionsChangedSlot()));
+
+			connect(ui.combine_pushbutton, SIGNAL(clicked()), this, SLOT(CombineSlot()));
+
+			connect(ui.select_output_folder_pushbutton, SIGNAL(clicked()), this, SLOT(SelectOutputFolderSlot()));
+
+			//qDebug() << "............................" << QProcess::execute("C:\\Program Files\\Diffraction Limited\\MaxIm DL V5\\MaxIm_DL.exe");
+			
+			//if (!CreateProcess(NULL, L"C:\\Program Files\\Diffraction Limited\\MaxIm DL V5\\MaxIm_DL.exe",
 	}
 
 	Select::~Select() {
@@ -103,7 +108,7 @@ namespace widgets {
 
 	void Select::SelectFoldersButtonClicked() {
 		QString dir = QFileDialog::getExistingDirectory(this, tr("Open Directory"),
-			"C:\\",
+			"Computer",
 			QFileDialog::ShowDirsOnly
 			| QFileDialog::DontResolveSymlinks);
 		QString tmp = ui.selected_folders_label->text();
@@ -140,6 +145,10 @@ namespace widgets {
 			ui.step_one_groupbox->setEnabled(false);
 			task_config->insert("TASKNAME", "READFOLDER");
 			task_config->insert("FOLDERS", folders);
+			task_config->insert("AVERAGEAREAWIDTH", ui.average_area_width_spinbox->value()+ui.average_area_x_offset_spinbox->value());
+			task_config->insert("AVERAGEAREAHEIGHT", ui.average_area_height_spinbox->value()+ui.average_area_y_offset_spinbox->value());
+			task_config->insert("AVERAGEAREAXOFFSET", ui.average_area_x_offset_spinbox->value());
+			task_config->insert("AVERAGEAREAYOFFSET", ui.average_area_y_offset_spinbox->value());
 			task_thread_.set_task(task_config);
 		} else if (current_step_ == 1) {
 			QString folder = ui.output_folder_lable->text();
@@ -160,6 +169,9 @@ namespace widgets {
 				task_config->insert("RENAMEFILES", "DISABLED");
 			}
 			task_thread_.set_task(task_config);
+			current_step_ = 2;
+			ui.step_three_groupbox->setEnabled(false);
+			ui.step_three_groupbox->setEnabled(false);
 		}
 	}
 
@@ -197,7 +209,7 @@ namespace widgets {
 		}
 		std::vector<utils::FileInfo> data = task_thread_.data();
 		QVector<double> x(data.size()), min0(data.size()), mean0(data.size()), max0(data.size());
-		
+
 		double max1 = std::numeric_limits<double>::min();
 		double min1 = std::numeric_limits<double>::max();		
 		for (int i = 0; i < data.size(); i++) {
@@ -304,7 +316,7 @@ namespace widgets {
 
 	void Select::SelectOutputFolderSlot() {
 		QString dir = QFileDialog::getExistingDirectory(this, tr("Open Directory"),
-			"C:\\",
+			"",
 			QFileDialog::ShowDirsOnly
 			| QFileDialog::DontResolveSymlinks);
 		ui.output_folder_lable->setText(dir);
