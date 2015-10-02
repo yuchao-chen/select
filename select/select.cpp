@@ -99,9 +99,6 @@ namespace widgets {
 	}
 
 	Select::~Select() {
-		if (!plot_->isHidden()) {
-			plot_->close();
-		}
 	}
 
 	void Select::SelectFoldersButtonClicked() {
@@ -328,5 +325,12 @@ namespace widgets {
 			s10.remove(pos, s10.size());
 		}
 		ui.prefix_lineedit->setText(s10);
+	}
+
+	void Select::closeEvent(QCloseEvent *e) {
+		if (!plot_->isHidden()) {
+			plot_->close();
+		}
+		e->accept();
 	}
 }

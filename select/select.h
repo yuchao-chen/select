@@ -14,6 +14,9 @@ namespace widgets {
 	public:
 		Select(QWidget *parent = 0);
 		~Select();
+	
+	protected:
+		void closeEvent(QCloseEvent *);
 
 	private slots:
 		void SelectFoldersButtonClicked();
